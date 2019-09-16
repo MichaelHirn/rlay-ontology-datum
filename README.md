@@ -8,7 +8,7 @@ This library uses a stacked approach of `Datum` -> `DatumAggregate`. Every non-r
 
 ### `Datum`
 
-The `Datum` uses `@rlay/transform` under the hood and guarantees that any generated schema is provided back to the client.
+The `Datum` uses `@rlay/transform` under the hood and guarantees that any generated schema is provided back to the client. If a schemaRegistry instance is provided, it will also write the auto-generated schema to the registry when a new `Datum` is created.
 
 ### `DatumAggregate`
 

@@ -16,7 +16,8 @@ const DatumDatumMixin = Mixin((superclass) => {
       const datumClassAssertion = this.client.datumDatumClass.
         from({subject: individual.cid});
       individual.$$datum = {
-        entityDependencies: [...entities.slice(0, -1), datumClassAssertion]
+        entityDependencies: [...entities.slice(0, -1), datumClassAssertion],
+        schemaRegistry: this.$$datum.schemaRegistry
       };
       return individual;
     }
@@ -36,6 +37,9 @@ const DatumDatumMixin = Mixin((superclass) => {
 
     async create () {
       const limit = pLimit(1);
+      if (this.$$datum.schemaRegistry) {
+        await this.$$datum.schemaRegistry.writeSchemaFromClient(this.client)
+      }
       await Promise.all(
         this.$$datum.entityDependencies.map(e => limit(async () => e.create())));
       return super.create();

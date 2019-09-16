@@ -9,10 +9,12 @@ const datumFactories = (client, startWith = 'Datum') => {
 }
 
 describe('RlayOntologyDatum', () => {
-  let rlayClientCreateStub;
+  let rlayClientCreateStub, schemaRegistrySpy;
   before(() => {
     // setup spies and stubs
     rlayClientCreateStub = sinon.stub(rlayClient, 'createEntity').resolves('0x000');
+    schemaRegistrySpy = { writeSchemaFromClient: () => {} };
+    sinon.spy(schemaRegistrySpy, 'writeSchemaFromClient');
   });
   describe('module', () => {
     it('returns a proper rlay-client', () => {
@@ -55,6 +57,7 @@ describe('RlayOntologyDatum', () => {
       before(() => {
         datumEntity = DatumMock.from({key: 'value'}, {transform: {prefix: 'test'}});
       })
+
       context('options: transform.unordered = true', () => {
         let toUnorderedJsonSpy, datumEntityUnorderedJson;
         before(() => {
@@ -69,6 +72,21 @@ describe('RlayOntologyDatum', () => {
 
         it('calls $$datum.RlayTransform.toUnorderedJson()', () => {
           assert.equal(toUnorderedJsonSpy.calledOnce, true);
+        });
+      });
+
+      context('schemaRegistry', () => {
+        let datumEntitySchemaRegistry;
+        before(() => {
+          DatumMock.$$datum.schemaRegistry = schemaRegistrySpy;
+          datumEntitySchemaRegistry = DatumMock.from({key: 'value'}, {transform: {
+            unordered: true,
+            prefix: 'test'
+          }});
+        });
+
+        it('passes schemaRegistry on', () => {
+          assert.equal(datumEntitySchemaRegistry.$$datum.schemaRegistry, schemaRegistrySpy);
         });
       });
 
@@ -130,6 +148,24 @@ describe('RlayOntologyDatum', () => {
       before(async () => {
         datumEntity = DatumMock.from({key: 'value'}, {transform: { prefix: 'test' }});
       });
+
+      context('schemaRegistry', () => {
+        let datumEntitySchemaRegistry;
+        before(() => schemaRegistrySpy.writeSchemaFromClient.resetHistory());
+        before(() => {
+          DatumMock.$$datum.schemaRegistry = schemaRegistrySpy;
+          datumEntitySchemaRegistry = DatumMock.from({key: 'value'}, {transform: {
+            unordered: true,
+            prefix: 'test'
+          }});
+        });
+
+        it('calls $$datum.schemaRegistry.writeSchemaFromClient', async () => {
+          await datumEntitySchemaRegistry.create();
+          assert.equal(schemaRegistrySpy.writeSchemaFromClient.callCount, 1);
+          assert.equal(schemaRegistrySpy.writeSchemaFromClient.lastCall.lastArg, rlayClient);
+        });
+      })
 
       it('returns a DatumMock instance', () => {
         assert.equal(datumEntity instanceof DatumMock, true);
