@@ -1,30 +1,19 @@
-# Rlay Ontology: Airtable
+# Rlay Ontology: Datum
 
-This module exposes high-level rlay entities for easy integration with Airtable
+This module exposes high-level interface over [@rlay/transform](https://github.com/rlay-project/rlay-transform) for easier transformation and integration of non-rlay objects (e.g. JSON, XML, CSV, etc.).
 
-It exposes a `AirtableRecord` entity that implements a custom `static from` and `create` which allows to write any individual entity to an airtable table and then stores a custom `AirtableRecord` individual which link to each other. Next time the `.create` method is called the record will be updated instead of newly created.
+## Architecture
 
-Example
+This library uses a stacked approach of `Datum` -> `DatumAggregate`. Every non-rlay object can be turned into a `Datum` and every `Datum` can be turned into a `DatumAggregate`.
 
-```js
-// create any rlay individual entity
-const indi = await rlayClient.Individual.create({
-  customAttr1: true,
-  customAttr2: 'a name'
-});
-// turn it into a `AirtableRecord` individual
-airEntity = AirtableRecordMock.from(indi.payload);
-await airEntity.resolve();
-// create that individual on Airtable
-await airEntity.create({ Name: airEntity.customAttr2, CID: airEntity.cid });
+### `Datum`
 
-// some time later; elsewhere
+The `Datum` uses `@rlay/transform` under the hood and guarantees that any generated schema is provided back to the client.
 
-// we fetch the same indi that we created earlier
-const indi = await rlayClient.Individual.find(`itsCid`);
-// turn it into a `AirtableRecord` individual
-airEntity = AirtableRecordMock.from(indi.payload);
-await airEntity.resolve();
-// as we created it earlier, it will update the airtable record and not create a new one
-await airEntity.create({ Name: airEntity.customAttr2, CID: airEntity.cid });
-```
+### `DatumAggregate`
+
+Many non-rlay objects cary an internal identifier, whenever that is the case it makes sense to transform the `Datum` into a `DatumAggregate`. This allows that data changes on the non-rlay object can be captured and rolled up into a 'static' representation, the `DatumAggregate`.
+
+## Usage
+
+This package exposes only mixins and it is recommended to implement the mixins in your application for each non-rlay object type.
