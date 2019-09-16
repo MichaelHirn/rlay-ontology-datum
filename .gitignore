@@ -1,0 +1,10 @@
+**/*cache
+**/.terraform
+*.tfstate
+**/*.backup
+.build
+node_modules
+**/assets/*
+/dist
+.env
+/config/prod*

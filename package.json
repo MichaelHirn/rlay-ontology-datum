@@ -1,0 +1,24 @@
+{
+  "name": "rlay-ontology-datum",
+  "version": "1.0.0",
+  "description": "Rlay ontology schema for higher-level @rlay/transform",
+  "main": "src/index.js",
+  "scripts": {
+    "seed": "rlay-seed --backend myneo4j --input src/ontology.js > src/generated/cids.json",
+    "generate": "rlay-generate --seed-file-output src/generated/cids.json --seed-file src/ontology.js --output src/index.js",
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@rlay/rlay-client-lib": "^0.2.0-pre.12",
+    "@rlay/transform": "^0.3.0",
+    "@rlay/web3-rlay": "^0.1.14"
+  },
+  "devDependencies": {
+    "@rlay/utils": "0.0.5",
+    "mocha": "^6.2.0",
+    "simple-mock": "^0.8.0",
+    "sinon": "^7.4.2"
+  }
+}
