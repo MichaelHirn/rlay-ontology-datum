@@ -1,13 +1,10 @@
 const { Mixin } = require('mixwith');
 const pLimit = require('p-limit');
+const { DatumDatumMixin } = require('./datum.js');
 
 const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass {
-  field (name, type = 'DataProperty') {
-    return this[`${this.prePath()}.${name}.${type}`];
-  }
-
   static from (_propertySchemaPayload, datum) {
-    if (!(datum instanceof this.client.DatumDatumMixin)) {
+    if (!(datum instanceof DatumDatumMixin)) {
       throw new Error('invalid input: expected input to be instance of DatumDatumMixin');
     }
 
