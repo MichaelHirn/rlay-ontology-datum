@@ -55,11 +55,22 @@ const DatumDatumMixin = Mixin((superclass) => {
       return this;
     }
 
-    field (fieldName, fieldType = 'DataProperty') {
+    fieldProperty (fieldName, fieldType = 'DataProperty') {
       if (!this.datumPrefixDataProperty) {
         throw new Error('unable to find .datumPrefixDataProperty; make sure it the entity is created and resolved');
       }
       return this.properties[`${this.datumPrefixDataProperty}.${fieldName}.${fieldType}`];
+    }
+
+    field (fieldName, fieldType = 'DataProperty') {
+      return this.fieldProperty(fieldName, fieldType);
+    }
+
+    fieldAssert (fieldName, fieldType = 'DataProperty') {
+      if (!this.datumPrefixDataProperty) {
+        throw new Error('unable to find .datumPrefixDataProperty; make sure it the entity is created and resolved');
+      }
+      return this[`${this.datumPrefixDataProperty}.${fieldName}.${fieldType}`];
     }
   }
 

@@ -19,12 +19,6 @@ const cleanEntity = (entity) => {
       all[one.key] = one.value
       return all;
     }, {});
-  //Reflect.deleteProperty(entity, 'client');
-  //Reflect.deleteProperty(entity, '_remoteCid');
-  //Reflect.deleteProperty(entity, '_payload');
-  //Reflect.deleteProperty(entity, 'cid');
-  //Reflect.deleteProperty(entity, '$$datum');
-  //return entity;
 }
 
 describe('RlayOntologyDatum', () => {
@@ -69,8 +63,16 @@ describe('RlayOntologyDatum', () => {
       assert.deepEqual(staticCreate, dotCreate);
     });
 
+    it('returns correct fieldProperty value', () => {
+      assert.equal(datumEntity.fieldProperty('key'), 'value');
+    });
+
     it('returns correct field value', () => {
-      assert.equal(datumEntity.field('key'), 'value');
+      assert.equal(datumEntity.field('key'), datumEntity.fieldProperty('key'));
+    });
+
+    it('returns correct fieldAssert value', () => {
+      assert.equal(datumEntity.fieldAssert('key'), undefined);
     });
   });
 
@@ -100,8 +102,16 @@ describe('RlayOntologyDatum', () => {
       assert.deepEqual(staticCreate, dotCreate);
     });
 
+    it('returns correct fieldProperty value', async () => {
+      assert.equal(datumAggEntity.fieldProperty('test', 'Class'), undefined);
+    });
+
     it('returns correct field value', async () => {
-      assert.equal(datumAggEntity.field('key'), 'value');
+      assert.equal(datumAggEntity.field('key'), datumAggEntity.fieldAssert('key'));
+    });
+
+    it('returns correct fieldAssert value', async () => {
+      assert.equal(datumAggEntity.fieldAssert('key'), 'value');
     });
   });
 });
