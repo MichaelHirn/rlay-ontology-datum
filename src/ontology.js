@@ -16,7 +16,11 @@ const classes = () => ({
 });
 
 const dataProperties = () => ({
-
+  ...utils.dataProp({
+    name: 'datumPrefix',
+    label: 'Datum Prefix',
+    description: 'The prefix that was used to generate the Datum. Includes RlayTransform',
+  }),
 })
 
 const objectProperties = () => ({

@@ -15,8 +15,16 @@ const DatumDatumMixin = Mixin((superclass) => {
       const individual = new this(this.client, entities.slice(-1).pop().payload);
       const datumClassAssertion = this.client.datumDatumClass.
         from({subject: individual.cid});
+      const prefixDataAssertion = this.client.datumPrefixDataProperty.from({
+        subject: individual.cid,
+        target: `RlayTransform.${options.transform.prefix}`
+      });
       individual.$$datum = {
-        entityDependencies: [...entities.slice(0, -1), datumClassAssertion],
+        entityDependencies: [
+          ...entities.slice(0, -1),
+          prefixDataAssertion,
+          datumClassAssertion
+        ],
         schemaRegistry: this.$$datum.schemaRegistry
       };
       return individual;
@@ -42,7 +50,16 @@ const DatumDatumMixin = Mixin((superclass) => {
       }
       await Promise.all(
         this.$$datum.entityDependencies.map(e => limit(async () => e.create())));
-      return super.create();
+      await super.create();
+      await this.resolve();
+      return this;
+    }
+
+    field (fieldName, fieldType = 'DataProperty') {
+      if (!this.datumPrefixDataProperty) {
+        throw new Error('unable to find .datumPrefixDataProperty; make sure it the entity is created and resolved');
+      }
+      return this.properties[`${this.datumPrefixDataProperty}.${fieldName}.${fieldType}`];
     }
   }
 

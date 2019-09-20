@@ -103,7 +103,7 @@ describe('RlayOntologyDatum', () => {
       });
 
       it('populates $$datum.entityDependencies correctly', () => {
-        assert.equal(datumEntity.$$datum.entityDependencies.length, 7);
+        assert.equal(datumEntity.$$datum.entityDependencies.length, 8);
       });
 
       it('asserts correct DatumDatumClass', () => {
@@ -111,6 +111,13 @@ describe('RlayOntologyDatum', () => {
         assert.equal(ca.payload.type, 'ClassAssertion');
         assert.equal(ca.payload.subject, datumEntity.cid);
         assert.equal(ca.payload.class, rlayClient.schema.datumDatumClass.cid);
+      });
+
+      it('asserts correct DatumPrefixDataProperty', () => {
+        const ca = datumEntity.$$datum.entityDependencies.slice(-2)[0];
+        assert.equal(ca.payload.type, 'DataPropertyAssertion');
+        assert.equal(ca.payload.subject, datumEntity.cid);
+        assert.equal(ca.payload.target, datumEntity.client.rlay.encodeValue('RlayTransform.test'));
       });
     });
 
@@ -199,7 +206,7 @@ describe('RlayOntologyDatum', () => {
         // we fake a .resolve here
         datumEntity.properties = {
           datumDatumClass: true
-        }
+        };
         datumAggEntity = DatumAggMock.from({datumDatumAggregateClass: true}, datumEntity);
       })
       context('invalid input: not a datum instance', () => {
@@ -214,18 +221,26 @@ describe('RlayOntologyDatum', () => {
       });
 
       it('populates $$datum.entityDependencies correctly', () => {
-        assert.equal(datumAggEntity.$$datum.entityDependencies.length, 1 + 3);
+        assert.equal(datumAggEntity.$$datum.entityDependencies.length, 1 + 5);
       });
 
       it('asserts correct DatumDatumAggregateClass', () => {
-        const ca = datumAggEntity.$$datum.entityDependencies.slice(-3)[0];
+        const ca = datumAggEntity.$$datum.entityDependencies.slice(-4)[0];
         assert.equal(ca.payload.type, 'ClassAssertion');
         assert.equal(ca.payload.subject, datumAggEntity.cid);
         assert.equal(ca.payload.class, rlayClient.schema.datumDatumAggregateClass.cid);
       });
 
+      it('asserts correct DatumPrefixDataProperty', () => {
+        const ca = datumAggEntity.$$datum.entityDependencies.slice(-1)[0];
+        assert.equal(ca.payload.type, 'DataPropertyAssertion');
+        assert.equal(ca.payload.subject, datumAggEntity.cid);
+        assert.equal(ca.payload.property, rlayClient.schema.datumPrefixDataProperty.cid);
+        assert.equal(ca.payload.target, datumEntity.client.rlay.encodeValue('RlayTransform.test'));
+      });
+
       it('asserts correct DatumDatumAggregateObjectProperty', () => {
-        const ca = datumAggEntity.$$datum.entityDependencies.slice(-2)[0];
+        const ca = datumAggEntity.$$datum.entityDependencies.slice(-3)[0];
         assert.equal(ca.payload.type, 'ObjectPropertyAssertion');
         assert.equal(ca.payload.subject, datumAggEntity.cid);
         assert.equal(ca.payload.property, rlayClient.schema.datumDatumObjectProperty.cid);
@@ -233,7 +248,7 @@ describe('RlayOntologyDatum', () => {
       });
 
       it('asserts correct DatumDatumObjectProperty', () => {
-        const ca = datumAggEntity.$$datum.entityDependencies.slice(-1)[0];
+        const ca = datumAggEntity.$$datum.entityDependencies.slice(-2)[0];
         assert.equal(ca.payload.type, 'ObjectPropertyAssertion');
         assert.equal(ca.payload.subject, datumEntity.cid);
         assert.equal(ca.payload.property, rlayClient.schema.datumDatumAggregateObjectProperty.cid);

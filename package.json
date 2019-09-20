@@ -6,7 +6,8 @@
   "scripts": {
     "seed": "rlay-seed --backend myneo4j --input src/ontology.js > src/generated/cids.json",
     "generate": "rlay-generate --seed-file-output src/generated/cids.json --seed-file src/ontology.js --output src/index.js",
-    "test": "mocha"
+    "test": "mocha test/lib.spec.js",
+    "test:integration": "mocha test/integration/test.spec.js --no-timeouts"
   },
   "author": "",
   "license": "ISC",

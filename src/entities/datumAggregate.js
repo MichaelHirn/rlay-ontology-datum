@@ -34,12 +34,19 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
       target: individual.cid,
       subject: datum.cid
     });
+    // the datumPrefixDataProperty
+    const dPrefix = this.client.datumPrefixDataProperty.from({
+      subject: individual.cid,
+      target: datum.datumPrefixDataProperty
+    });
     individual.$$datum = {
       entityDependencies: [
+        ...propertySchemaPayload.schemaAssertions,
         ...datumPropertiesSchemaPayload.schemaAssertions,
         da,
         dA2D,
-        d2DA
+        d2DA,
+        dPrefix
       ]
     };
     return individual;
@@ -55,7 +62,16 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
     const limit = pLimit(1);
     await Promise.all(
       this.$$datum.entityDependencies.map(e => limit(async () => e.create())));
-    return super.create();
+    await super.create();
+    await this.resolve();
+    return this;
+  }
+
+  field (fieldName, fieldType = 'DataProperty') {
+    if (!this.datumPrefixDataProperty) {
+      throw new Error('unable to find .datumPrefixDataProperty; make sure it the entity is created and resolved');
+    }
+    return this[`${this.datumPrefixDataProperty}.${fieldName}.${fieldType}`];
   }
 });
 
