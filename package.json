@@ -1,6 +1,6 @@
 {
   "name": "rlay-ontology-datum",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Rlay ontology schema for higher-level @rlay/transform",
   "main": "src/index.js",
   "scripts": {
@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@rlay/utils": "0.0.5",
-    "mocha": "^6.2.0",
     "simple-mock": "^0.8.0",
     "sinon": "^7.4.2"
   }
