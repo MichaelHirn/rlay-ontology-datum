@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@rlay/rlay-client-lib": "^0.2.0-pre.12",
+    "@rlay/rlay-client-lib": "^0.2.2",
     "@rlay/transform": "^0.3.0",
     "@rlay/web3-rlay": "^0.1.14"
   },

@@ -1,5 +1,4 @@
 /* eslint-env node, mocha */
-const simple = require('simple-mock');
 const sinon = require('sinon');
 const assert = require('assert');
 const rlayClient = require('../src');
@@ -9,10 +8,13 @@ const datumFactories = (client, startWith = 'Datum') => {
 }
 
 describe('RlayOntologyDatum', () => {
-  let rlayClientCreateStub, schemaRegistrySpy;
+  let rlayClientCreateStub, rlayClientCreateEntitiesStub, schemaRegistrySpy;
   before(() => {
     // setup spies and stubs
     rlayClientCreateStub = sinon.stub(rlayClient, 'createEntity').resolves('0x000');
+    rlayClientCreateEntitiesStub = sinon.stub(rlayClient, 'createEntities').resolves(['0x000']);
+    sinon.stub(rlayClient, 'findEntityByCID').resolves({type: 'Individual'});
+    sinon.stub(rlayClient, 'findEntityByCypher').resolves([{type: 'Individual'}]);
     schemaRegistrySpy = { writeSchemaFromClient: () => {} };
     sinon.spy(schemaRegistrySpy, 'writeSchemaFromClient');
   });
@@ -26,7 +28,6 @@ describe('RlayOntologyDatum', () => {
     });
 
     it('has the special entityFactories attached', () => {
-      const rlayClient = require('../src');
       const expectedEntityFactories = [
         'DatumDatumMixin',
         'DatumDatumAggregateMixin',
@@ -152,6 +153,7 @@ describe('RlayOntologyDatum', () => {
       let staticFromSpy, datumEntityCreateSpy;
       let datumStaticFromStub;
       before(() => rlayClientCreateStub.resetHistory());
+      before(() => rlayClientCreateEntitiesStub.resetHistory());
       before(async () => {
         datumEntity = DatumMock.from({key: 'value'}, {transform: { prefix: 'test' }});
       });
@@ -181,7 +183,9 @@ describe('RlayOntologyDatum', () => {
       it('creates all entities in $$datum.entityDependencies', async () => {
         await datumEntity.create();
         const depCount = datumEntity.$$datum.entityDependencies.length
-        assert.equal(rlayClientCreateStub.callCount, depCount + 1);
+        assert.equal(rlayClientCreateStub.callCount, 1);
+        assert.equal(rlayClientCreateEntitiesStub.callCount, 1);
+        assert.equal(rlayClientCreateEntitiesStub.args[0][0].length, depCount);
       });
     });
   });
@@ -207,6 +211,7 @@ describe('RlayOntologyDatum', () => {
         datumEntity.properties = {
           datumDatumClass: true
         };
+        datumEntity.datumPrefixDataProperty = 'RlayTransform.test'
         datumAggEntity = DatumAggMock.from({datumDatumAggregateClass: true}, datumEntity);
       })
       context('invalid input: not a datum instance', () => {
@@ -291,6 +296,7 @@ describe('RlayOntologyDatum', () => {
       let staticFromSpy, datumEntityCreateSpy;
       let datumStaticFromStub;
       before(() => rlayClientCreateStub.resetHistory());
+      before(() => rlayClientCreateEntitiesStub.resetHistory());
       before(async () => {
         datumAggEntity = DatumAggMock.from({datumDatumAggregateClass: true}, datumEntity);
       });
@@ -302,7 +308,9 @@ describe('RlayOntologyDatum', () => {
       it('creates all entities in $$datum.entityDependencies', async () => {
         await datumAggEntity.create();
         const depCount = datumAggEntity.$$datum.entityDependencies.length
-        assert.equal(rlayClientCreateStub.callCount, depCount + 1);
+        assert.equal(rlayClientCreateStub.callCount, 1);
+        assert.equal(rlayClientCreateEntitiesStub.callCount, 1);
+        assert.equal(rlayClientCreateEntitiesStub.args[0][0].length, depCount);
       });
     });
   });

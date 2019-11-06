@@ -1,9 +1,11 @@
 const { Mixin } = require('mixwith');
 const pLimit = require('p-limit');
 const { DatumDatumMixin } = require('./datum.js');
+const debug = require('../debug.js').extend('datumAgg');
 
 const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass {
   static from (_propertySchemaPayload, datum) {
+    debug.extend('from')(this.cid);
     if (!(datum instanceof DatumDatumMixin)) {
       throw new Error('invalid input: expected input to be instance of DatumDatumMixin');
     }
@@ -29,7 +31,7 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
       target: datum.cid,
       subject: individual.cid
     });
-    // the link from datum <- this
+    // the link from datum -> this
     const d2DA = this.client.datumDatumAggregateObjectProperty.from({
       target: individual.cid,
       subject: datum.cid
@@ -53,15 +55,16 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
   }
 
   static async create (_propertySchemaPayload, datum) {
+    debug.extend('create')(this.cid);
     const entity = this.from(_propertySchemaPayload, datum);
     await entity.create();
     return entity;
   }
 
   async create () {
-    const limit = pLimit(1);
-    await Promise.all(
-      this.$$datum.entityDependencies.map(e => limit(async () => e.create())));
+    debug.extend('create')(this.cid);
+    await this.client.createEntities(
+      this.$$datum.entityDependencies.map(e => e.payload));
     await super.create();
     await this.resolve();
     return this;

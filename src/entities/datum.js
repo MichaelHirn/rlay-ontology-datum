@@ -1,10 +1,12 @@
 const { Mixin } = require('mixwith');
 const { RlayTransform } = require('@rlay/transform');
 const pLimit = require('p-limit');
+const debug = require('../debug.js').extend('datum');
 
 const DatumDatumMixin = Mixin((superclass) => {
   class MixinClass extends superclass {
     static from (jsonObject, options = {transform: {}}) {
+      debug.extend('from')(this.cid);
       if (options.transform.unordered) {
         jsonObject = this.$$datum.RlayTransform.toUnorderedJson(jsonObject);
       }
@@ -31,6 +33,7 @@ const DatumDatumMixin = Mixin((superclass) => {
     }
 
     static async create (jsonObject, options = {transform: {}}) {
+      debug.extend('create')(this.cid);
       const entity = this.from(jsonObject, options);
       await entity.create();
       return entity;
@@ -44,12 +47,12 @@ const DatumDatumMixin = Mixin((superclass) => {
     }
 
     async create () {
-      const limit = pLimit(1);
+      debug.extend('create')(this.cid);
       if (this.$$datum.schemaRegistry) {
         await this.$$datum.schemaRegistry.writeSchemaFromClient(this.client)
       }
-      await Promise.all(
-        this.$$datum.entityDependencies.map(e => limit(async () => e.create())));
+      await this.client.createEntities(
+        this.$$datum.entityDependencies.map(e => e.payload));
       await super.create();
       await this.resolve();
       return this;

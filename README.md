@@ -17,3 +17,7 @@ Many non-rlay objects cary an internal identifier, whenever that is the case it 
 ## Usage
 
 This package exposes only mixins and it is recommended to implement the mixins in your application for each non-rlay object type.
+
+### Example
+
+Datum*Mixin -> (CustomDatum*Mixin) -> CustomDatum* -> (CustomDatum*Factory)
