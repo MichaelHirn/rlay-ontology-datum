@@ -6,7 +6,7 @@ const debug = require('../debug.js').extend('datumAgg');
 const mcreateResolveLimit = pLimit(1);
 
 const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass {
-  static from (_propertySchemaPayload, datum) {
+  static from (datum, _propertySchemaPayload) {
     debug.extend('from')(this.cid);
     if (!(datum instanceof DatumDatumMixin)) {
       throw new Error('invalid input: expected input to be instance of DatumDatumMixin');
@@ -56,18 +56,18 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
     return individual;
   }
 
-  static async create (_propertySchemaPayload, datum) {
+  static async create (datum, _propertySchemaPayload) {
     debug.extend('create')(this.cid);
-    const entity = this.from(_propertySchemaPayload, datum);
+    const entity = this.from(datum, _propertySchemaPayload);
     await entity.create();
     return entity;
   }
 
-  static async mcreate(_propertySchemaPayload, datums) {
+  static async mcreate (datums, _propertySchemaPayload) {
     const entities = datums.
       map(datum => {
         // from and split into deps and entity for later
-        const datumEntity = this.from(_propertySchemaPayload, datum);
+        const datumEntity = this.from(datum, _propertySchemaPayload);
         return {
           dependencies: datumEntity.$$datum.entityDependencies,
           entity: datumEntity
