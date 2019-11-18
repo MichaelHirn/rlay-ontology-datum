@@ -2,9 +2,31 @@
 const sinon = require('sinon');
 const assert = require('assert');
 const rlayClient = require('../src');
+const check = require('check-types');
 
 const datumFactories = (client, startWith = 'Datum') => {
   return Object.keys(client).filter(key => key.startsWith(startWith))
+}
+
+const countSinonCalls = stubs => {
+  return stubs.
+    map(stub => stub.args.reduce((all, one) => [...all, ...one], [])).
+    reduce((all, one) => [...all, ...one], []).
+    reduce((all, one) => {
+      if (check.not.array(one)) return all + 1
+      return all + one.length
+    }, 0);
+}
+
+const cleanEntity = entity => {
+  const object = {}
+  const excluded = ['client', '$$datum'];
+  Object.keys(entity).forEach(key => {
+    if(!excluded.includes(key)) {
+      object[key] = entity[key]
+    }
+  })
+  return object;
 }
 
 describe('RlayOntologyDatum', () => {
@@ -149,6 +171,52 @@ describe('RlayOntologyDatum', () => {
       });
     });
 
+    describe('static mcreate', () => {
+      let staticFromSpy, datumEntityCreateSpy;
+      let payloadCounter, findCounter;
+      before(() => rlayClientCreateStub.resetHistory());
+      before(() => rlayClientCreateEntitiesStub.resetHistory());
+      before(() => rlayClient.findEntityByCypher.resetHistory());
+      before(async () => {
+        // we create 2 datums the normal way
+        await DatumMock.create({key: 'value1'}, {transform: { prefix: 'test' }});
+        await DatumMock.create({key: 'value2'}, {transform: { prefix: 'test' }});
+        // now we record all the payloads we sent
+        payloadCounter = countSinonCalls([
+          rlayClientCreateStub,
+          rlayClientCreateEntitiesStub
+        ]);
+        // and the find counter to measure .resolve calls
+        findCounter = rlayClient.findEntityByCypher.args.length;
+      });
+      before(() => rlayClientCreateStub.resetHistory());
+      before(() => rlayClientCreateEntitiesStub.resetHistory());
+      before(() => rlayClient.findEntityByCypher.resetHistory());
+
+      it('send the same payloads as all via create', async () => {
+        await DatumMock.mcreate(
+          [{key: 'value1'}, {key: 'value2'}],
+          {transform: { prefix: 'test' }});
+
+        const newPayloadCounter = countSinonCalls([
+          rlayClientCreateStub,
+          rlayClientCreateEntitiesStub
+        ]);
+
+        assert.equal(newPayloadCounter, payloadCounter);
+        assert.equal(rlayClient.findEntityByCypher.args.length, findCounter);
+      });
+
+      it('return the resolved datums correctly', async () => {
+        const response = (await DatumMock.mcreate(
+          [{key: 'value1'}, {key: 'value2'}],
+          {transform: { prefix: 'test' }})).map(cleanEntity);
+        const d1 = cleanEntity(await DatumMock.create({key: 'value1'}));
+        const d2 = cleanEntity(await DatumMock.create({key: 'value2'}));
+        assert.deepEqual(response, [d1, d2]);
+      });
+    });
+
     describe('.create', () => {
       let staticFromSpy, datumEntityCreateSpy;
       let datumStaticFromStub;
@@ -289,6 +357,57 @@ describe('RlayOntologyDatum', () => {
 
       it('calls create', () => {
         assert.equal(datumEntityCreateSpy.calledOnce, true);
+      });
+    });
+
+    describe('static mcreate', () => {
+      let staticFromSpy, datumEntityCreateSpy;
+      let payloadCounter, findCounter;
+      let d1, d2
+      before(async () => {
+        // we create 2 datums the normal way
+        d1 = await DatumMock.create({key: 'value1'}, {transform: { prefix: 'test' }});
+        d2 = await DatumMock.create({key: 'value2'}, {transform: { prefix: 'test' }});
+        // reset stubs
+        rlayClientCreateStub.resetHistory();
+        rlayClientCreateEntitiesStub.resetHistory();
+        rlayClient.findEntityByCypher.resetHistory();
+        // we create the 2 datumAggs we are actually interested
+        await DatumAggMock.create({datumDatumAggregateClass: true}, d1);
+        await DatumAggMock.create({datumDatumAggregateClass: true}, d2);
+        // now we record all the payloads we sent
+        payloadCounter = countSinonCalls([
+          rlayClientCreateStub,
+          rlayClientCreateEntitiesStub
+        ]);
+
+        findCounter = rlayClient.findEntityByCypher.args.length;
+      });
+      before(() => rlayClientCreateStub.resetHistory());
+      before(() => rlayClientCreateEntitiesStub.resetHistory());
+      before(() => rlayClient.findEntityByCypher.resetHistory());
+
+      it('send the same payloads as all via create', async () => {
+        await DatumAggMock.mcreate({datumDatumAggregateClass: true}, [d1, d2]);
+
+        const newPayloadCounter = countSinonCalls([
+          rlayClientCreateStub,
+          rlayClientCreateEntitiesStub
+        ]);
+
+        assert.equal(newPayloadCounter, payloadCounter);
+        assert.equal(rlayClient.findEntityByCypher.args.length, findCounter);
+      });
+
+      it('return the resolved datums correctly', async () => {
+        const response = (await DatumAggMock.mcreate(
+          {datumDatumAggregateClass: true}, [d1, d2])).map(cleanEntity);
+
+        const da1 = cleanEntity(
+          await DatumAggMock.create({datumDatumAggregateClass: true}, d1));
+        const da2 = cleanEntity(
+          await DatumAggMock.create({datumDatumAggregateClass: true}, d2));
+        assert.deepEqual(response, [da1, da2]);
       });
     });
 

@@ -3,6 +3,8 @@ const pLimit = require('p-limit');
 const { DatumDatumMixin } = require('./datum.js');
 const debug = require('../debug.js').extend('datumAgg');
 
+const mcreateResolveLimit = pLimit(1);
+
 const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass {
   static from (_propertySchemaPayload, datum) {
     debug.extend('from')(this.cid);
@@ -59,6 +61,38 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
     const entity = this.from(_propertySchemaPayload, datum);
     await entity.create();
     return entity;
+  }
+
+  static async mcreate(_propertySchemaPayload, datums) {
+    const entities = datums.
+      map(datum => {
+        // from and split into deps and entity for later
+        const datumEntity = this.from(_propertySchemaPayload, datum);
+        return {
+          dependencies: datumEntity.$$datum.entityDependencies,
+          entity: datumEntity
+        };
+      }).
+      reduce((all, one) => {
+        // aggregate them into one
+        return {
+          dependencies: [...all.dependencies, ...one.dependencies],
+          entities: [...all.entities, one.entity]
+        }
+      }, { dependencies: [], entities: [] });
+
+    const payloads = [...entities.dependencies, ...entities.entities].
+      map(entity => entity.payload);
+
+    await this.client.createEntities(payloads);
+
+    // resolve all the datum entities and return them
+    return Promise.all(entities.entities.map(entity => {
+      return mcreateResolveLimit(async () => {
+        await entity.resolve();
+        return entity;
+      })
+    }));
   }
 
   async create () {
