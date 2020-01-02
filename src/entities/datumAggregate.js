@@ -1,9 +1,6 @@
 const { Mixin } = require('mixwith');
-const pLimit = require('p-limit');
 const { DatumDatumMixin } = require('./datum.js');
 const debug = require('../debug.js').extend('datumAgg');
-
-const mcreateResolveLimit = pLimit(1);
 
 const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass {
   static from (datum, _propertySchemaPayload) {
@@ -87,11 +84,9 @@ const DatumDatumAggregateMixin = Mixin((superclass) => class extends superclass 
     await this.client.createEntities(payloads);
 
     // resolve all the datum entities and return them
-    return Promise.all(entities.entities.map(entity => {
-      return mcreateResolveLimit(async () => {
-        await entity.resolve();
-        return entity;
-      })
+    return Promise.all(entities.entities.map(async entity => {
+      await entity.resolve();
+      return entity;
     }));
   }
 

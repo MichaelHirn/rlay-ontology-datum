@@ -1,9 +1,6 @@
 const { Mixin } = require('mixwith');
 const { RlayTransform } = require('@rlay/transform');
-const pLimit = require('p-limit');
 const debug = require('../debug.js').extend('datum');
-
-const mcreateResolveLimit = pLimit(1);
 
 const DatumDatumMixin = Mixin((superclass) => {
   class MixinClass extends superclass {
@@ -65,11 +62,9 @@ const DatumDatumMixin = Mixin((superclass) => {
       await this.client.createEntities(payloads);
 
       // resolve all the datum entities and return them
-      return Promise.all(entities.entities.map(entity => {
-        return mcreateResolveLimit(async () => {
-          await entity.resolve();
-          return entity;
-        })
+      return Promise.all(entities.entities.map(async entity => {
+        await entity.resolve();
+        return entity;
       }));
     }
 
